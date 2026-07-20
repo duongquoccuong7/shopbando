@@ -1,70 +1,70 @@
 <?php
 if (!defined('_CHECK')) {
-    die('Truy cập không hợp lệ');
+    die('Invalid access');
 }
-layout('/auth/header', 'Đăng ký tài khoản');
+layout('auth/header', 'Register');
 if (!empty($_POST)) {
     $filter = filterData();
     $errors = [];
 
     //validate fullname
     if (empty(trim($filter['fullname']))) {
-        $errors['fullname']['required'] = 'Họ và tên chưa được nhập';
+        $errors['fullname']['required'] = 'Full name is required';
     }
 
     //Validate Email
     if (empty(trim($filter['email']))) {
-        $errors['email']['required'] = 'Email chưa được nhập';
+        $errors['email']['required'] = 'Email is required';
     } else {
         if (!validateEmail($filter['email'])) {
-            $errors['email']['isEmail'] = 'Email không đúng định dạng';
+            $errors['email']['isEmail'] = 'Invalid email format';
         } else {
             $email = $filter['email'];
             $checkEmail = getRows("SELECT * FROM users WHERE email ='$email' ");
             if ($checkEmail > 0) {
-                $errors['email']['check'] = 'Email đã tồn tại';
+                $errors['email']['check'] = 'Email already exists';
             }
         }
     }
 
     //validate phone
     if (empty(trim($filter['phone']))) {
-        $errors['phone']['required'] = 'Số điện thoại chưa được nhập';
+        $errors['phone']['required'] = 'Phone number is required';
     } else {
         if (!isPhone($filter['phone'])) {
-            $errors['phone']['isPhone'] = 'Số điện thoại không đúng định dạng';
+            $errors['phone']['isPhone'] = 'Invalid phone number format';
         }
     }
 
     //validate password
     if (empty(trim($filter['password']))) {
-        $errors['password']['required'] = 'Mật khẩu chưa được nhập';
+        $errors['password']['required'] = 'Password is required';
     } else {
         $password = trim($filter['password']);
-        if (strlen(trim($filter['password'])) < 2) {
-            $errors['password']['length'] = 'Mật khẩu phải ít nhất 8 ký tự';
+        if (strlen(trim($filter['password'])) < 8) {
+            $errors['password']['length'] = 'Password must be at least 8 characters';
         }
         // if (preg_match('/\s/', $password)) {
 
-        //     $errors['password']['space'] = 'Mật khẩu không được chứa khoảng trắng';
+        //     $errors['password']['space'] = 'Password must not contain spaces';
         // }
 
         // if (!preg_match('/[0-9]/', $password)) {
 
-        //     $errors['password']['number'] = 'Mật khẩu phải chứa ít nhất 1 số';
+        //     $errors['password']['number'] = 'Password must contain at least 1 number';
         // }
         // if (!preg_match('/[\W_]/', $password)) {
 
-        //     $errors['password']['special'] = 'Mật khẩu phải chứa ít nhất 1 ký tự đặc biệt';
+        //     $errors['password']['special'] = 'Password must contain at least 1 special character';
         // }
     }
 
     //validate confirm password
     if (empty(trim($filter['confirm_password']))) {
-        $errors['confirm_password']['required'] = ' Vui lòng nhập lại mật khẩu';
+        $errors['confirm_password']['required'] = 'Please re-enter your password';
     } else {
         if (trim($filter['password']) !== trim($filter['confirm_password'])) {
-            $errors['confirm_password']['check'] = 'Mật khẩu Không trùng khớp';
+            $errors['confirm_password']['check'] = 'Passwords do not match';
         }
     }
 
@@ -75,7 +75,7 @@ if (!empty($_POST)) {
             'email' => $filter['email'],
             'phone' => $filter['phone'],
             'role' => 'admin',
-            'password' => password_hash($filter['password'], PASSWORD_DEFAULT), //mã hóa password
+            'password' => password_hash($filter['password'], PASSWORD_DEFAULT), //hash password
             'created_at' => date('Y:m:d H:i:s'),
             'active_token' => $activeToken,
             'status' => 1,
@@ -83,25 +83,25 @@ if (!empty($_POST)) {
         $rel = insert('users', $insertdata);
 
         if ($rel) {
-            //Xây dựng gửi mail
+            //Construct email sending
             $emailTo = $filter['email'];
-            //Chủ đề mail
-            $subject = 'Kích hoạt tài khoản học online';
-            //Nôi dung mail
-            $content = 'Chúc mừng bạn đăng ký thành công tài khoản!<br>';
-            $content .= 'Để kích hoạt tài khoản , bạn hãy click  vào đường link bên dưới: <br>';
+            //Email subject
+            $subject = 'Activate your online learning account';
+            //Email content
+            $content = 'Congratulations on successfully registering your account!<br>';
+            $content .= 'To activate your account, please click on the link below: <br>';
             $content .= _HOST_URL . '/?module=auth&action=active&token=' . $activeToken . '<br>';
-            //Gửi mail
+            //Send email
             sendMail($emailTo, $subject, $content);
-            //Tạo session nhăm lưu lại để tránh bị mất dữ liệu
-            setSessionFlash('msg', 'Đăng ký thành công, vui lòng kích hoạt tài khoản');
+            //Set flash session to store data
+            setSessionFlash('msg', 'Registration successful, please activate your account');
             setSessionFlash('msg_type', 'green');
         } else {
-            setSessionFlash('msg', 'Đăng ký không thành công, vui lòng kiểm tra lại');
+            setSessionFlash('msg', 'Registration failed, please check again');
             setSessionFlash('msg_type', 'red');
         }
     } else {
-        $mess = 'Dữ liệu không hợp lệ ,hãy kiểm tra lại!';
+        $mess = 'Invalid data, please check again!';
         $color = 'red';
         setSessionFlash('oldData', $filter);
         setSessionFlash('errors', $errors);
@@ -125,7 +125,7 @@ $errorsArr = getSessionFlash('errors');
                     <div class="layer layer-3"></div>
                 </div>
             </div>
-            <h2>Đăng ký</h2>
+            <h2>Register</h2>
             <?php
             if (!empty($msg)) {
                 getMess($msg, $msg_type);
@@ -137,9 +137,9 @@ $errorsArr = getSessionFlash('errors');
             <div class="form-group">
                 <div class="input-wrapper">
                     <input type="text" id="fullname" name="fullname"
-                        value="<?php echo !empty($oldData['fullname']) ?  $oldData['fullname'] : null; ?>" required
+                        value="<?php echo !empty($oldData['fullname']) ? $oldData['fullname'] : null; ?>" required
                         autocomplete="fullname">
-                    <label for="fullname">Họ & Tên</label>
+                    <label for="fullname">Full Name</label>
                     <div class="input-line"></div>
                     <div class="ripple-container"></div>
                 </div>
@@ -150,8 +150,8 @@ $errorsArr = getSessionFlash('errors');
             <div class="form-group">
                 <div class="input-wrapper">
                     <input type="email" id="email" name="email" value="<?php if (!empty($oldData['email'])) {
-                                                                            echo  oldData($oldData, 'email');
-                                                                        }   ?>" required autocomplete="email">
+                                                                            echo oldData($oldData, 'email');
+                                                                        } ?>" required autocomplete="email">
                     <label for="email">Email</label>
                     <div class="input-line"></div>
                     <div class="ripple-container"></div>
@@ -163,9 +163,9 @@ $errorsArr = getSessionFlash('errors');
             <div class="form-group">
                 <div class="input-wrapper ">
                     <input type="text" id="phone" name="phone" value="<?php if (!empty($oldData['phone'])) {
-                                                                            echo  oldData($oldData, 'phone');
-                                                                        }   ?>" required autocomplete="phone">
-                    <label for="phone">Số điện thoại</label>
+                                                                            echo oldData($oldData, 'phone');
+                                                                        } ?>" required autocomplete="phone">
+                    <label for="phone">Phone Number</label>
                     <div class="input-line"></div>
                     <div class="ripple-container"></div>
                 </div>
@@ -177,7 +177,7 @@ $errorsArr = getSessionFlash('errors');
                 <div class="input-wrapper password-wrapper">
                     <input type="password" id="password" name="password" value="" required
                         autocomplete="current-password">
-                    <label for="password">Mật khẩu</label>
+                    <label for="password">Password</label>
                     <div class="input-line"></div>
                     <button type="button" class="password-toggle" id="passwordToggle"
                         aria-label="Toggle password visibility">
@@ -194,7 +194,7 @@ $errorsArr = getSessionFlash('errors');
                 <div class="input-wrapper password-wrapper">
                     <input type="password" id="confirm_password" name="confirm_password" value="" required
                         autocomplete="current-password">
-                    <label for="confirm_password">Xác nhận mật khẩu</label>
+                    <label for="confirm_password">Confirm Password</label>
                     <div class="input-line"></div>
                     <button type="button" class="password-toggle" id="confirmPasswordToggle"
                         aria-label="Toggle password visibility">
@@ -208,7 +208,7 @@ $errorsArr = getSessionFlash('errors');
             <!-- end confirm password -->
             <button type="submit" class="login-btn material-btn">
                 <div class="btn-ripple"></div>
-                <span class="btn-text">ĐĂNG KÝ</span>
+                <span class="btn-text">REGISTER</span>
                 <div class="btn-loader">
                     <svg class="loader-circle" viewBox="0 0 50 50">
                         <circle class="loader-path" cx="25" cy="25" r="12" fill="none" stroke="currentColor"
@@ -219,9 +219,8 @@ $errorsArr = getSessionFlash('errors');
         </form>
 
         <div class="signup-link">
-            <p>Đã có tài khoản? <a href="<?php echo _HOST_URL . "/?module=auth&action=login" ?>"
-                    class="create-account">Đăng
-                    nhập</a></p>
+            <p>Already have an account? <a href="<?php echo _HOST_URL . "/?module=auth&action=login" ?>"
+                    class="create-account">Sign in</a></p>
         </div>
     </div>
 </div>

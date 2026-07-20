@@ -1,71 +1,72 @@
 <?php
 if (!defined('_CHECK')) {
-    die('Truy cập không hợp lệ');
+    die('Invalid access');
 }
-layout('/auth/header', 'Đăng nhập');
+layout('auth/header', 'Sign In');
 if (isPost()) {
     $filter = filterData();
     $errors = [];
+
     //validate email
     if (empty(trim($filter['email']))) {
-        $errors['email']['required'] = 'Email chưa nhập';
+        $errors['email']['required'] = 'Email has not been entered';
     } else {
-        //Đúng định dạng email , emaill này đã tồn tại chưa
+        //Valid email format, check if email exists
         if (!validateEmail(trim($filter['email']))) {
-            $errors['email']['isEmail'] = 'Email không đúng định dạng';
+            $errors['email']['isEmail'] = 'Invalid email format';
         }
     }
 
-
     //validate password
     if (empty(trim($filter['password']))) {
-        $errors['password']['required'] = 'Mật khẩu chưa được nhập';
+        $errors['password']['required'] = 'Password has not been entered';
     } else {
         $password = trim($filter['password']);
         if (strlen(trim($filter['password'])) < 2) {
-            $errors['password']['length'] = 'Mật khẩu phải ít nhất 8 ký tự';
+            $errors['password']['length'] = 'Password must be at least 8 characters';
         }
         // if (preg_match('/\s/', $password)) {
 
-        //     $errors['password']['space'] = 'Mật khẩu không được chứa khoảng trắng';
+        //     $errors['password']['space'] = 'Password must not contain spaces';
         // }
 
         // if (!preg_match('/[0-9]/', $password)) {
 
-        //     $errors['password']['number'] = 'Mật khẩu phải chứa ít nhất 1 số';
+        //     $errors['password']['number'] = 'Password must contain at least 1 number';
         // }
         // if (!preg_match('/[\W_]/', $password)) {
 
-        //     $errors['password']['special'] = 'Mật khẩu phải chứa ít nhất 1 ký tự đặc biệt';
+        //     $errors['password']['special'] = 'Password must contain at least 1 special character';
         // }
     }
+
     if (empty($errors)) {
-        //Kiẻm tra dữ liệu
+        //Check data
         $email = $filter['email'];
         $password = $filter['password'];
-        // kiểm tra email
+        // check email
         $checkEmail = getOne("SELECT * FROM users WHERE email = '$email'");
         if (!empty($checkEmail)) {
             if ($checkEmail['status'] != 2) {
-                setSessionFlash('msg', 'Tài khoản chưa được kích hoạt');
+                setSessionFlash('msg', 'Account has not been activated');
                 setSessionFlash('msg_type', 'red');
                 redirect('?module=auth&action=login');
             }
             if (!empty($password)) {
                 $checkStatus = password_verify($password, $checkEmail['password']);
                 if ($checkStatus) {
-                    //TK login 1 nơi
+                    //Single device login restriction
                     $user_id = $checkEmail['id'];
                     $checkAlrealdy = getRows("SELECT * FROM login_token WHERE user_id =$user_id");
                     // if ($checkAlrealdy > 0) {
-                    //     // setSessionFlash('msg', 'Tài khoản đang được đăng nhập tại nơi khác, vui lòng thử lại sau');
-                    //     // setSessionFlash('msg_type', 'danger');
-                    //     // redirect('?module=auth&action=login');
+                    //     setSessionFlash('msg', 'Account is currently logged in elsewhere, please try again later');
+                    //     setSessionFlash('msg_type', 'danger');
+                    //     redirect('?module=auth&action=login');
                     // } else {
-                    //Tạo token và insert vào bảng token_login
+                    //Create token and insert into login_token table
                     delete('login_token', "user_id=$user_id");
                     $token = sha1(uniqid() . time());
-                    //Gán token_login lên session
+                    //Assign token_login to session
                     setSession('token_login', $token);
                     $data = [
                         'token' => $token,
@@ -74,21 +75,21 @@ if (isPost()) {
                     ];
                     $insert_Token = insert('login_token', $data);
                     if ($insert_Token) {
-                        //Điều hướng đến dashboard
+                        //Redirect to dashboard
                         setSession('user_id', $checkEmail['id']);
                         redirect('?module=dashboard&action=index');
                     } else {
-                        setSessionFlash('msg', 'Đăng nhập không thành công, vui lòng kiểm tra lại dữ liệu');
+                        setSessionFlash('msg', 'Login failed, please check your credentials');
                         setSessionFlash('msg_type', 'red');
                     }
                 }
             } else {
-                setSessionFlash('msg', 'Đăng nhập không thành công, vui lòng kiểm tra lại dữ liệu');
+                setSessionFlash('msg', 'Login failed, please check your credentials');
                 setSessionFlash('msg_type', 'red');
             }
         }
     } else {
-        setSessionFlash('msg', 'Đăng nhập không thành công, vui lòng kiểm tra lại dữ liệu');
+        setSessionFlash('msg', 'Login failed, please check your credentials');
         setSessionFlash('msg_type', 'red');
         setSessionFlash('old_data', $filter);
         setSessionFlash('errors', $errors);
@@ -112,7 +113,7 @@ $errorsArr = getSessionFlash('errors');
                     <div class="layer layer-3"></div>
                 </div>
             </div>
-            <h2>Đăng nhập</h2>
+            <h2>Sign In</h2>
             <?php
             if (!empty($msg)) {
                 getMess($msg, $msg_type);
@@ -125,8 +126,8 @@ $errorsArr = getSessionFlash('errors');
                 <div class="input-wrapper">
                     <input type="email" id="email" value="<?php
                                                             if (!empty($olddata['email'])) {
-                                                                echo  oldData($olddata, 'email');
-                                                            }   ?>" name="email" required autocomplete="email">
+                                                                echo oldData($olddata, 'email');
+                                                            } ?>" name="email" required autocomplete="email">
                     <label for="email">Email</label>
                     <div class="input-line"></div>
                     <div class="ripple-container"></div>
@@ -150,12 +151,12 @@ $errorsArr = getSessionFlash('errors');
             </div>
 
             <div class="form-options">
-                <a href="<?php echo _HOST_URL . "/?module=auth&action=forgotpass" ?>" class="forgot-password">Quên mật
-                    khẩu?</a>
+                <a href="<?php echo _HOST_URL . "/?module=auth&action=forgotpass" ?>" class="forgot-password">Forgot
+                    password?</a>
             </div>
             <button type="submit" class="login-btn material-btn">
                 <div class="btn-ripple"></div>
-                <span class="btn-text">Đăng nhập</span>
+                <span class="btn-text">Sign In</span>
                 <div class="btn-loader">
                     <svg class="loader-circle" viewBox="0 0 50 50">
                         <circle class="loader-path" cx="25" cy="25" r="12" fill="none" stroke="currentColor"
@@ -166,8 +167,8 @@ $errorsArr = getSessionFlash('errors');
         </form>
 
         <div class="signup-link">
-            <p>Bạn chưa có tài khoản? <a href="<?php echo _HOST_URL . "/?module=auth&action=register" ?>"
-                    class="create-account">Đăng ký</a></p>
+            <p>Don't have an account? <a href="<?php echo _HOST_URL . "/?module=auth&action=register" ?>"
+                    class="create-account">Sign Up</a></p>
         </div>
 
 

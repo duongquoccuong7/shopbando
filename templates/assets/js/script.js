@@ -1,4 +1,4 @@
-// ================= Product & Topic Sliders =================
+// Product & Topic Sliders
 document.querySelectorAll(".slide-topic, .slide-product").forEach(initSlider);
 
 function initSlider(section) {
@@ -50,7 +50,7 @@ function initSlider(section) {
   update();
 }
 
-// ================= Infinite Sidebar Banner Slider =================
+//  Sidebar Banner Slider
 const sidebarList = document.querySelector(".sidebar-list");
 const originalBanners = document.querySelectorAll(".sidebar-anchor");
 const sideBtnPrev = document.querySelector(".sidebar-btn-prev");
@@ -180,13 +180,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
   let currentIndex = 0;
 
-  // Hiện coupon đầu tiên ngay khi tải trang
   coupons[currentIndex].classList.add("active");
 
-  // Cứ mỗi 10 giây (10000ms) thì đổi sang coupon tiếp theo
   setInterval(() => {
-    coupons[currentIndex].classList.remove("active"); // Ẩn coupon cũ
-    currentIndex = (currentIndex + 1) % coupons.length; // Chuyển sang index tiếp theo
-    coupons[currentIndex].classList.add("active"); // Hiện coupon mới
+    coupons[currentIndex].classList.remove("active");
+    currentIndex = (currentIndex + 1) % coupons.length;
+    coupons[currentIndex].classList.add("active");
   }, 10000);
 });
